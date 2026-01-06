@@ -1,0 +1,94 @@
+# ==============================================================================
+# MuZero Configuration for FrozenLake-v1 (Deterministic Baseline)
+# ==============================================================================
+# This configuration provides standard baseline settings for the deterministic
+# FrozenLake-v1 environment. It uses small networks and common hyperparameters.
+
+# --- Game and Preprocessing Settings ---
+game_settings:
+    env_name: "FrozenLake-v1"
+    render_mode: null # "human" to watch, null for training
+    env_kwargs:
+        is_slippery: False # Use deterministic version
+
+    preprocessing:
+        # --- Settings for Discrete State Handling (FrozenLake) ---
+        one_hot_encode_discrete_state: true
+        num_discrete_states: 16 # 4x4 grid
+
+        # --- Not used for FrozenLake ---
+        use_frame_stacking: false
+        grayscale: false
+        # resize_dims: null
+    use_reward_shaping: false # No reward shaping for CartPole-v1
+
+# --- Global Network Variables ---
+global_network_vars:
+    nnr_input_shape: [16] # One-hot encoding of 16 states
+    latent_dim: 16 # Small latent dimension for a simple 16-state env
+    action_dim: ??? # Set automatically (will be 4)
+    global_seed: 42
+    learning_rate: 0.001 # Standard Adam learning rate
+
+# --- Neural Network Architecture & Training Settings ---
+neural_network:
+    representation_network_type: "mlp" # MLP for vector input
+    representation_input_states: 1 # Markovian env
+
+    # --- Representation Network (h) --- MLP Config ---
+    # Encodes observation [16] -> latent state [16]
+    # Small network likely sufficient.
+    representation_network:
+        hidden_layers: [32] # One small hidden layer
+        activation_functions: ["relu", "identity"] # ReLU hidden, Linear output
+
+    # --- Dynamics Network (g) --- MLP Config ---
+    # Predicts s' [16], r [1] from s [16] + action [4, one-hot]
+    dynamics_network:
+        one_hot_actions: true
+        hidden_layers: [32] # One small hidden layer
+        activation_functions: ["relu", "identity"] # Linear output
+
+    # --- Prediction Network (f) --- MLP Config ---
+    # Predicts policy logits [4], value [1] from s [16]
+    prediction_network:
+        hidden_layers: [32] # One small hidden layer
+        activation_functions: ["relu", "identity"] # Linear output
+
+    # K: Number of steps to unroll dynamics model in loss
+    unroll_steps: 5 # Standard value
+
+# --- Reinforcement Learning Manager (RLM) Settings ---
+rlm:
+    discount_factor: 0.99 # Standard discount
+    max_episode_steps: 100 # Standard limit for FrozenLake
+    action_temperature: 1.0 # Standard exploration start
+    episodes_per_train_step: 10 # Train reasonably often
+    total_training_steps: 1000 # Example target steps
+
+# --- MuZero MCTS (UMCTS) Settings ---
+umcts:
+    # Fewer simulations needed for deterministic 16-state environment
+    simulations: 25 # Reduced from 80 in user's config
+    c_puct: 1.25 # Standard exploration constant
+    dmax: 10 # Max rollout depth
+
+# --- Episode Buffer Settings ---
+episode_buffer:
+    # Max number of *episodes* to store
+    buffer_size: 5000 # Reasonable size
+
+# --- Training Process Settings ---
+training:
+    batch_size: 64 # Standard batch size
+    # Save frequency - 100 seems too often for a baseline
+    save_checkpoint_interval: 100 # Save every 1000 steps
+    load_checkpoint_step: 0 # Start from scratch
+    checkpoint_dir: "muzero_checkpoints/FrozenLake_Det_v1_baseline" # Baseline dir name
+
+    # --- Loss Weights ---
+    # Standard balanced weights
+    policy_loss_weight: 1.0
+    value_loss_weight: 1.0
+    reward_loss_weight: 1.0
+    # --------------------------

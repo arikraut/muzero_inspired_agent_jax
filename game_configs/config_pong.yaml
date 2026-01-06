@@ -1,0 +1,118 @@
+# ==============================================================================
+# MuZero Configuration for ALE/Pong-v5 (Atari Baseline)
+# ==============================================================================
+# This configuration provides standard baseline settings for Atari Pong.
+# It uses a CNN, frame stacking, and common hyperparameters for Atari tasks.
+
+# --- Game and Preprocessing Settings ---
+game_settings:
+    env_name: "ALE/Pong-v5"
+    render_mode: null # "human" to watch, null for training
+
+    # --- Standard ALE arguments ---
+    env_kwargs:
+        frameskip: 4 # Standard frameskip for Atari
+        repeat_action_probability: 0.0 # Deterministic action repeats (common for MuZero)
+        # full_action_space: False # Usually default for Pong
+
+    # --- Standard Atari preprocessing ---
+    preprocessing:
+        use_frame_stacking: true
+        num_stacked_frames: 4
+        grayscale: true
+        resize_dims: [84, 84] # Common resize dimension
+
+        # --- Not used for Atari ---
+        one_hot_encode_discrete_state: false
+        # num_discrete_states: ???
+    use_reward_shaping: false # No reward shaping for Pong
+
+# --- Global Network Variables ---
+global_network_vars:
+    # Input shape: [Height, Width, Channels*NumStackedFrames]
+    nnr_input_shape: [84, 84, 4] # 84x84 image, 1 grayscale channel * 4 stacked frames
+    # Latent dimension capacity
+    latent_dim: 256
+    # Action dimension (set automatically, Pong default: 6)
+    action_dim: ???
+    # Seed for reproducibility
+    global_seed: 42
+    # Learning rate for Adam optimizer
+    learning_rate: 0.0005 # Common starting LR for Adam on Atari
+
+# --- Neural Network Architecture & Training ---
+neural_network:
+    # Use CNN for image input
+    representation_network_type: "cnn"
+    # Number of raw observations needed per NNr input (matches stacking)
+    representation_input_states: 4
+
+    # --- Representation Network (h) --- CNN Config ---
+    # Standard Atari CNN architecture
+    representation_network:
+        cnn_filters: [32, 64, 64]
+        cnn_kernel_sizes: [8, 4, 3]
+        cnn_strides: [4, 2, 1]
+        cnn_activation: "relu"
+        dense_layers: [256] # Intermediate dense layer size
+        dense_activation: "relu"
+        output_activation: "identity" # Linear output for latent state
+
+    # --- Dynamics Network (g) --- MLP Config ---
+    dynamics_network:
+        one_hot_actions: true
+        hidden_layers: [256, 256] # MLP capacity for dynamics
+        activation_functions: ["relu", "relu", "identity"] # Linear output
+
+    # --- Prediction Network (f) --- MLP Config ---
+    prediction_network:
+        hidden_layers: [256] # MLP capacity for prediction
+        activation_functions: ["relu", "identity"] # Linear output
+
+    # K: Number of steps to unroll dynamics model in loss calculation
+    unroll_steps: 5 # Standard for MuZero on Atari
+
+# --- Reinforcement Learning Manager (RLM) Settings ---
+rlm:
+    # Discount factor (gamma)
+    discount_factor: 0.997 # Standard for Atari
+    # Max steps per episode (108k env frames / 4 frameskip)
+    max_episode_steps: 27000
+    # Initial temperature for action selection during gameplay
+    action_temperature: 1.0
+    # Number of episodes played between potential training intervals
+    episodes_per_train_step: 4 # Balance collection/training
+    # Total training steps target (example, increase for full run)
+    total_training_steps: 1000000 # e.g., 1 Million gradient steps
+
+# --- MuZero MCTS (UMCTS) Settings ---
+umcts:
+    # Simulations per MCTS search
+    simulations: 50 # Standard for MuZero on Atari
+    # PUCT exploration constant
+    c_puct: 1.25
+    # Max depth for MCTS rollouts (often == unroll_steps for Atari)
+    dmax: 5
+
+# --- Episode Buffer Settings ---
+episode_buffer:
+    # Max number of *episodes*. Limited by typical memory constraints for Atari frames.
+    buffer_size: 2000 # Adjust based on available RAM (~1-2M transitions total)
+
+# --- Training Process Settings ---
+training:
+    # Batch size for training updates
+    batch_size: 128 # Common size for Atari
+    # Checkpoint saving frequency (in training steps)
+    save_checkpoint_interval: 25000 # Save less frequently for long runs
+    # Start from scratch
+    load_checkpoint_step: 0
+    # Checkpoint directory
+    checkpoint_dir: "muzero_checkpoints/ALE_Pong_v5_baseline"
+
+    # --- Loss Weights ---
+    # Standard weights, often scaling down value loss for Atari
+    policy_loss_weight: 1.0
+    value_loss_weight: 0.25
+    reward_loss_weight: 1.0
+    # --------------------------

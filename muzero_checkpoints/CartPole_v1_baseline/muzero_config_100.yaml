@@ -1,0 +1,59 @@
+game_settings:
+  env_name: CartPole-v1
+  render_mode: null
+  env_kwargs: {}
+  preprocessing:
+    use_frame_stacking: false
+    grayscale: false
+    one_hot_encode_discrete_state: false
+  use_reward_shaping: true
+global_network_vars:
+  nnr_input_shape: !!python/tuple
+  - 4
+  latent_dim: 16
+  action_dim: 2
+  global_seed: 42
+  learning_rate: 0.001
+neural_network:
+  representation_network_type: mlp
+  representation_input_states: 1
+  representation_network:
+    hidden_layers:
+    - 64
+    activation_functions:
+    - relu
+    - identity
+  dynamics_network:
+    one_hot_actions: true
+    hidden_layers:
+    - 64
+    activation_functions:
+    - relu
+    - identity
+  prediction_network:
+    hidden_layers:
+    - 64
+    activation_functions:
+    - relu
+    - identity
+  unroll_steps: 5
+rlm:
+  discount_factor: 0.99
+  max_episode_steps: 500
+  action_temperature: 1.0
+  episodes_per_train_step: 10
+  total_training_steps: 5000
+umcts:
+  simulations: 25
+  c_puct: 1.25
+  dmax: 10
+episode_buffer:
+  buffer_size: 1000
+training:
+  batch_size: 64
+  save_checkpoint_interval: 100
+  load_checkpoint_step: 0
+  checkpoint_dir: muzero_checkpoints/CartPole_v1_baseline
+  policy_loss_weight: 1.0
+  value_loss_weight: 0.2
+  reward_loss_weight: 1.0
