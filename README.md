@@ -1,4 +1,4 @@
-# IT3105 Project 2 — MuZero-inspired Agent (JAX/Flax)
+# MuZero-inspired Agent (JAX/Flax)
 
 This repository contains an educational, MuZero-inspired implementation built for the course **AI Programming (IT3105)**. The goal of the project was to implement the core MuZero components—latent representation learning, model-based planning with MCTS, and training from self-play—using modern JAX tooling.
 
@@ -31,10 +31,9 @@ This is **not** reproduction of DeepMind’s MuZero. It is a working, end-to-end
 
 The implementation reaches strong performance on **CartPole-v1** using the provided configuration.
 
-Recommended: add plots under `results/` and embed them here, for example:
+![CartPole Training Progress](results/cartpole_training_plot.png)
+![Traning Loss History](results/train_hist_cartplole.png)
 
--   `results/cartpole_training.png` (loss curves + avg reward)
--   `results/cartpole_eval.png` (optional)
 
 ---
 
@@ -150,8 +149,7 @@ This project was completed under course time constraints. The implementation pri
 
 -   a working end-to-end pipeline,
 -   readable modular structure,
--   demonstrable learning on CartPole,
-    over a fully faithful reproduction of all MuZero details.
+-   demonstrable learning on CartPole.
 
 ---
 
